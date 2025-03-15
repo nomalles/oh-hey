@@ -367,6 +367,415 @@
             font-size: 14px;
             color: #666;
         }
+
+        /* Add these styles to fix mobile UI issues */
+
+        /* Menu panel positioning */
+        #menu-panel {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 80%;
+            max-width: 300px;
+            height: 100%;
+            background-color: white;
+            transition: right 0.3s ease;
+            z-index: 99;
+            padding: 20px;
+            box-sizing: border-box;
+            pointer-events: auto;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+            transform: translateZ(0);
+        }
+
+        #menu-panel.active {
+            right: 0;
+        }
+
+        /* Passport view positioning */
+        #passport-view {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 70%;
+            background-color: white;
+            border-radius: 25px 25px 0 0;
+            padding: 20px;
+            box-sizing: border-box;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            z-index: 200;
+            pointer-events: auto;
+            box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        #passport-view.active {
+            transform: translateY(0);
+        }
+
+        /* Passport edit positioning */
+        #passport-edit {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            padding: 20px;
+            box-sizing: border-box;
+            z-index: 300;
+            display: none;
+            pointer-events: auto;
+        }
+
+        /* Make sure three.js canvas is full screen and behind everything */
+        #scene-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* UI overlay should be on top of the canvas */
+        #ui-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* Menu button should be visible and interactive */
+        #menu-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background-color: #6c63ff;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            pointer-events: auto;
+            z-index: 100;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Media queries for better mobile experience */
+        @media (max-width: 768px) {
+            #menu-button {
+                top: 15px;
+                right: 15px;
+                width: 45px;
+                height: 45px;
+            }
+            
+            .passport-avatar {
+                width: 100px;
+                height: 100px;
+            }
+            
+            .emoji-button {
+                font-size: 22px;
+            }
+        }
+
+        /* Default state for UI elements that should be hidden */
+        #menu-panel {
+            right: -100%;
+        }
+
+        #passport-view {
+            transform: translateY(100%);
+        }
+
+        #passport-edit {
+            display: none;
+        }
+
+        /* Additional styling for a more polished look */
+
+/* Improved button and option styling */
+.option-button {
+    padding: 10px 15px;
+    background-color: #6c63ff;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 8px;
+    font-weight: 500;
+    box-shadow: 0 2px 5px rgba(108, 99, 255, 0.2);
+}
+
+.option-button:hover {
+    background-color: #5046e5;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(108, 99, 255, 0.3);
+}
+
+.option-button.active {
+    background-color: #5046e5;
+    box-shadow: 0 0 0 2px white, 0 0 0 4px #5046e5;
+}
+
+/* Improved color options */
+.color-option {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: inline-block;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    border: 2px solid #ddd;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.color-option:hover {
+    transform: scale(1.1);
+    border-color: #bbb;
+}
+
+.color-option.active {
+    border: 2px solid #5046e5;
+    box-shadow: 0 0 8px rgba(80, 70, 229, 0.5);
+    transform: scale(1.1);
+}
+
+/* Confirm button styling */
+#confirm-avatar {
+    display: block;
+    width: 80%;
+    max-width: 250px;
+    margin: 20px auto;
+    padding: 15px;
+    background-color: #6c63ff;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(108, 99, 255, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+#confirm-avatar:hover {
+    background-color: #5046e5;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(108, 99, 255, 0.4);
+}
+
+#confirm-avatar:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 5px rgba(108, 99, 255, 0.4);
+}
+
+/* Add ripple effect to buttons */
+.option-button, #confirm-avatar, .action-button, .emoji-button {
+    position: relative;
+    overflow: hidden;
+}
+
+.option-button::after, #confirm-avatar::after, .action-button::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    background-image: radial-gradient(circle, #fff 10%, transparent 10.01%);
+    background-repeat: no-repeat;
+    background-position: 50%;
+    transform: scale(10, 10);
+    opacity: 0;
+    transition: transform 0.5s, opacity 0.8s;
+}
+
+.option-button:active::after, #confirm-avatar:active::after, .action-button:active::after {
+    transform: scale(0, 0);
+    opacity: 0.3;
+    transition: 0s;
+}
+
+/* Enhanced menu button */
+#menu-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+#menu-button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Updated passport view styling */
+#passport-view {
+    box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.passport-avatar {
+    width: 120px;
+    height: 120px;
+    margin-bottom: 20px;
+    border-radius: 50%;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.passport-info h2 {
+    margin-top: 0;
+    margin-bottom: 5px;
+    font-size: 24px;
+    color: #333;
+}
+
+.passport-info p {
+    margin: 8px 0;
+    color: #666;
+    font-size: 16px;
+}
+
+/* Emoji reactions styling */
+.emoji-reactions {
+    display: flex;
+    justify-content: center;
+    margin-top: 25px;
+    gap: 15px;
+}
+
+.emoji-button {
+    font-size: 24px;
+    background: #f5f5f5;
+    border: none;
+    cursor: pointer;
+    padding: 10px;
+    border-radius: 50%;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.emoji-button:hover {
+    transform: scale(1.2);
+    background-color: #e0e0e0;
+}
+
+.emoji-button.reacted {
+    animation: emojiPop 0.5s ease;
+}
+
+@keyframes emojiPop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.4); }
+    100% { transform: scale(1.2); }
+}
+
+/* Action buttons styling */
+.action-button {
+    background-color: #6c63ff;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 12px 25px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    box-shadow: 0 3px 8px rgba(108, 99, 255, 0.3);
+}
+
+.action-button:hover {
+    background-color: #5046e5;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 12px rgba(108, 99, 255, 0.4);
+}
+
+/* Loading screen styling */
+#loading-screen {
+    background: linear-gradient(135deg, #6c63ff 0%, #5046e5 100%);
+    color: white;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+#loading-spinner {
+    border: 5px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top: 5px solid white;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 30px;
+}
+
+/* Avatar creator styling */
+#avatar-creator {
+    background-color: #f8f9fa;
+}
+
+#avatar-preview {
+    background: linear-gradient(135deg, #e6e9f0 0%, #eef1f5 100%);
+}
+
+/* Improved font styling throughout */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+h2, h3 {
+    color: #333;
+}
+
+/* Enhanced responsive design */
+@media (max-width: 480px) {
+    .option-buttons {
+        gap: 8px;
+    }
+    
+    .option-button {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+    
+    .color-option {
+        width: 35px;
+        height: 35px;
+        margin-right: 8px;
+    }
+    
+    #confirm-avatar {
+        padding: 12px;
+        font-size: 15px;
+    }
+    
+    .emoji-button {
+        width: 45px;
+        height: 45px;
+        font-size: 20px;
+    }
+}
     </style>
 </head>
 <body>
@@ -388,6 +797,9 @@
                     <button class="option-button" data-shape="cone">Cone</button>
                     <button class="option-button" data-shape="cylinder">Cylinder</button>
                     <button class="option-button" data-shape="torus">Donut</button>
+                    <button class="option-button" data-shape="capsule">Capsule</button>
+                    <button class="option-button" data-shape="octahedron">Octa</button>
+                    <button class="option-button" data-shape="rounded-cube">Smooth Cube</button>
                 </div>
             </div>
             
@@ -400,6 +812,10 @@
                     <span class="color-option" style="background-color: #feca57;" data-color="#feca57"></span>
                     <span class="color-option" style="background-color: #6c63ff;" data-color="#6c63ff"></span>
                     <span class="color-option" style="background-color: #ff9ff3;" data-color="#ff9ff3"></span>
+                    <!-- Add gradient options -->
+                    <span class="color-option" style="background: linear-gradient(to right, #fc466b, #3f5efb);" data-color="#fc466b" data-gradient="#3f5efb"></span>
+                    <span class="color-option" style="background: linear-gradient(to right, #11998e, #38ef7d);" data-color="#11998e" data-gradient="#38ef7d"></span>
+                    <span class="color-option" style="background: linear-gradient(to right, #8A2387, #F27121);" data-color="#8A2387" data-gradient="#F27121"></span>
                     <span class="color-option" style="background-color: #ffffff;" data-color="#ffffff"></span>
                     <span class="color-option" style="background-color: #576574;" data-color="#576574"></span>
                 </div>

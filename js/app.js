@@ -267,11 +267,11 @@ class OhHeyApp {
     }
     
     initThreeJS() {
-        this.debugLog('Setting up full Three.js scene');
+        this.debugLog('Setting up enhanced Three.js scene');
         
         // Create scene
         this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0xf0f0f0);
+        this.scene.background = new THREE.Color(0x87CEEB); // Sky blue background
         
         // Create camera
         this.camera = new THREE.PerspectiveCamera(
@@ -280,41 +280,109 @@ class OhHeyApp {
             0.1,
             1000
         );
-        this.camera.position.set(0, 5, 10);
+        this.camera.position.set(0, 8, 15);
         
-        // Create renderer
-        this.renderer = new THREE.WebGLRenderer({ antialias: true });
+        // Create renderer with improved settings
+        this.renderer = new THREE.WebGLRenderer({ 
+            antialias: true,
+            alpha: true
+        });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setPixelRatio(window.devicePixelRatio);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limit pixel ratio for performance
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         this.sceneContainer.appendChild(this.renderer.domElement);
         
-        // Add lights
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        // Add lights for better visual appearance
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
         this.scene.add(ambientLight);
         
         const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
         directionalLight.position.set(10, 20, 10);
+        directionalLight.castShadow = true;
+        
+        // Improve shadow quality
+        directionalLight.shadow.mapSize.width = 1024;
+        directionalLight.shadow.mapSize.height = 1024;
+        directionalLight.shadow.camera.near = 0.5;
+        directionalLight.shadow.camera.far = 50;
+        directionalLight.shadow.camera.left = -20;
+        directionalLight.shadow.camera.right = 20;
+        directionalLight.shadow.camera.top = 20;
+        directionalLight.shadow.camera.bottom = -20;
+        
         this.scene.add(directionalLight);
         
-        // Add ground plane
+        // Add a subtle hemisphere light for sky/ground lighting
+        const hemisphereLight = new THREE.HemisphereLight(0x87CEEB, 0xCCCCCC, 0.3);
+        this.scene.add(hemisphereLight);
+        
+        // Add ground plane with gradient using shader material
         const groundGeometry = new THREE.PlaneGeometry(100, 100);
-        const groundMaterial = new THREE.MeshStandardMaterial({ 
-            color: 0xeeeeee,
-            roughness: 0.8,
-            metalness: 0.2
+        const groundMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+                colorA: { value: new THREE.Color(0xCCCCCC) },
+                colorB: { value: new THREE.Color(0xEEEEEE) }
+            },
+            vertexShader: `
+                varying vec2 vUv;
+                void main() {
+                    vUv = uv;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                uniform vec3 colorA;
+                uniform vec3 colorB;
+                varying vec2 vUv;
+                void main() {
+                    gl_FragColor = vec4(mix(colorA, colorB, vUv.y), 1.0);
+                }
+            `
         });
         const ground = new THREE.Mesh(groundGeometry, groundMaterial);
         ground.rotation.x = -Math.PI / 2;
         ground.position.y = -2;
+        ground.receiveShadow = true;
         this.scene.add(ground);
         
-        // Add grid helper
-        const gridHelper = new THREE.GridHelper(100, 50, 0xcccccc, 0xcccccc);
+        // Add grid helper for spatial awareness
+        const gridHelper = new THREE.GridHelper(100, 50, 0xCCCCCC, 0xDDDDDD);
         gridHelper.position.y = -1.99;
+        gridHelper.material.transparent = true;
+        gridHelper.material.opacity = 0.3;
         this.scene.add(gridHelper);
+        
+        // Add a few decorative elements in the space
+        this.addDecorativeElements();
         
         // Add user avatar
         this.addUserAvatar();
+        
+        // Add simple camera controls for easier viewing
+        try {
+            // Only add for non-mobile devices to avoid interfering with touch events
+            if (window.innerWidth > 768) {
+                // Simple orbit control to look around 
+                this.camera.lookAt(0, 0, 0);
+                
+                window.addEventListener('mousemove', (event) => {
+                    if (event.buttons === 0) { // Only when not clicking
+                        const mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+                        const mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+                        
+                        // Subtle camera movement based on mouse position
+                        this.camera.position.x = Math.sin(mouseX * 0.5) * 15;
+                        this.camera.position.z = Math.cos(mouseX * 0.5) * 15;
+                        this.camera.position.y = 8 + mouseY * 2;
+                        
+                        this.camera.lookAt(0, 0, 0);
+                    }
+                });
+            }
+        } catch (error) {
+            this.debugLog('Could not initialize camera controls: ' + error.message);
+        }
         
         // Start animation loop
         this.animate();
@@ -328,23 +396,62 @@ class OhHeyApp {
     }
     
     addUserAvatar() {
-        this.debugLog('Adding user avatar to scene');
+        this.debugLog('Adding user avatar to scene with enhanced styling');
         
         try {
             // Get user avatar data
             const avatarData = this.passportManager.getUserPassport().avatarData;
             
-            // Create avatar mesh
-            const avatar = AvatarCreator.createAvatarMesh(avatarData);
+            // Create avatar mesh with enhanced materials
+            let geometry;
+            switch (avatarData.shape) {
+                case 'sphere':
+                    geometry = new THREE.SphereGeometry(1, 32, 32);
+                    break;
+                case 'cube':
+                    geometry = new THREE.BoxGeometry(1.8, 1.8, 1.8);
+                    break;
+                case 'cone':
+                    geometry = new THREE.ConeGeometry(1, 2, 32);
+                    break;
+                case 'cylinder':
+                    geometry = new THREE.CylinderGeometry(1, 1, 2, 32);
+                    break;
+                case 'torus':
+                    geometry = new THREE.TorusGeometry(0.8, 0.4, 16, 50);
+                    break;
+                case 'capsule':
+                    geometry = CustomShapes.createCapsuleGeometry(0.8, 1.6, 4, 8);
+                    break;
+                case 'octahedron':
+                    geometry = new THREE.OctahedronGeometry(1.2, 0);
+                    break;
+                case 'rounded-cube':
+                    geometry = new THREE.BoxGeometry(1.6, 1.6, 1.6, 4, 4, 4);
+                    geometry = CustomShapes.roundedBoxGeometry(geometry, 0.2);
+                    break;
+                default:
+                    geometry = new THREE.SphereGeometry(1, 32, 32);
+            }
             
-            // Add avatar to scene
+            // Create enhanced material
+            const material = new THREE.MeshPhongMaterial({
+                color: avatarData.color,
+                shininess: 100,
+                specular: 0x333333, 
+                emissive: new THREE.Color(avatarData.color).multiplyScalar(0.2)
+            });
+            
+            // Create head mesh
+            const avatar = new THREE.Mesh(geometry, material);
+            avatar.castShadow = true;
             avatar.position.set(0, 0, 0);
             this.scene.add(avatar);
             
-            // Add face
+            // Add face to avatar
             this.addFaceToAvatar(avatar, avatarData.face);
             
-            // Store reference
+            // Store references
             this.userAvatar = avatar;
             this.avatarMeshes.set(this.userId, avatar);
             
@@ -545,9 +652,20 @@ class OhHeyApp {
     animate() {
         requestAnimationFrame(() => this.animate());
         
-        // Rotate avatars slightly for visual effect
+        const time = Date.now() * 0.001; // Time in seconds
+        
+        // Animate avatars
         this.avatarMeshes.forEach(avatar => {
             avatar.rotation.y += 0.01;
+        });
+        
+        // Animate decorative elements
+        this.scene.children.forEach(child => {
+            if (child.userData && child.userData.animation) {
+                const anim = child.userData.animation;
+                child.position.y = anim.initialY + Math.sin(time * anim.speed * 5 + anim.phase) * anim.amplitude;
+                child.rotation.y += anim.speed;
+            }
         });
         
         // Render scene
@@ -620,6 +738,62 @@ class OhHeyApp {
         if (!this.isInitialized) {
             this.initApp();
         }
+    }
+
+    addDecorativeElements() {
+        // Add some abstract shapes in the environment
+        const shapes = [
+            { 
+                geometry: new THREE.TorusKnotGeometry(2, 0.5, 64, 16), 
+                position: {x: -15, y: 5, z: -10},
+                color: 0x6c63ff,
+                rotation: {x: Math.PI/4, y: Math.PI/3, z: 0}
+            },
+            { 
+                geometry: new THREE.DodecahedronGeometry(3, 0), 
+                position: {x: 20, y: 1, z: -15},
+                color: 0xff9ff3,
+                rotation: {x: 0, y: Math.PI/4, z: Math.PI/4}
+            },
+            { 
+                geometry: new THREE.IcosahedronGeometry(2, 0), 
+                position: {x: -18, y: 1, z: 12},
+                color: 0x1dd1a1,
+                rotation: {x: Math.PI/6, y: 0, z: Math.PI/5}
+            },
+            { 
+                geometry: new THREE.ConeGeometry(1.5, 4, 6), 
+                position: {x: 13, y: 0, z: 18},
+                color: 0xfeca57,
+                rotation: {x: 0, y: 0, z: Math.PI/7}
+            }
+        ];
+        
+        shapes.forEach(shape => {
+            const material = new THREE.MeshPhongMaterial({
+                color: shape.color,
+                shininess: 50,
+                specular: 0x333333,
+                transparent: true,
+                opacity: 0.8
+            });
+            
+            const mesh = new THREE.Mesh(shape.geometry, material);
+            mesh.position.set(shape.position.x, shape.position.y, shape.position.z);
+            mesh.rotation.set(shape.rotation.x, shape.rotation.y, shape.rotation.z);
+            mesh.castShadow = true;
+            
+            // Add subtle animation
+            const initialY = shape.position.y;
+            mesh.userData.animation = {
+                speed: 0.001 + Math.random() * 0.002,
+                amplitude: 0.5 + Math.random() * 1.0,
+                initialY: initialY,
+                phase: Math.random() * Math.PI * 2
+            };
+            
+            this.scene.add(mesh);
+        });
     }
 }
 
