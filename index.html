@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oh-Hey | Connect Nearby</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f0f0;
+        }
+        
+        #loading-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #6c63ff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            color: white;
+            font-size: 24px;
+        }
+        
+        #loading-spinner {
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 5px solid white;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        #avatar-creator {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #f5f5f5;
+            display: none;
+            z-index: 900;
+        }
+        
+        #avatar-preview {
+            width: 100%;
+            height: 60%;
+            background-color: #e0e0e0;
+        }
+        
+        #avatar-controls {
+            width: 100%;
+            height: 40%;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+        
+        .control-group {
+            margin-bottom: 15px;
+        }
+        
+        .control-group h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        
+        .option-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .option-button {
+            padding: 10px 15px;
+            background-color: #6c63ff;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+        
+        .option-button.active {
+            background-color: #5046e5;
+            box-shadow: 0 0 0 2px white, 0 0 0 4px #5046e5;
+        }
+        
+        .color-option {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: inline-block;
+            margin-right: 10px;
+            border: 2px solid #ddd;
+        }
+        
+        .color-option.active {
+            border: 2px solid #5046e5;
+            box-shadow: 0 0 5px rgba(80, 70, 229, 0.5);
+        }
+        
+        #confirm-avatar {
+            display: block;
+            width: 80%;
+            max-width: 250px;
+            margin: 20px auto;
+            padding: 12px;
+            background-color: #6c63ff;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        
+        #main-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+        }
+        
+        #scene-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        #ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        #menu-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background-color: #6c63ff;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            pointer-events: auto;
+            z-index: 100;
+        }
+        
+        #menu-panel {
+            position: absolute;
+            top: 0;
+            right: -300px;
+            width: 300px;
+            height: 100%;
+            background-color: white;
+            transition: right 0.3s ease;
+            z-index: 99;
+            padding: 20px;
+            box-sizing: border-box;
+            pointer-events: auto;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        #menu-panel.active {
+            right: 0;
+        }
+        
+        #passport-view {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 70%;
+            background-color: white;
+            border-radius: 25px 25px 0 0;
+            padding: 20px;
+            box-sizing: border-box;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            z-index: 200;
+            pointer-events: auto;
+            box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        #passport-view.active {
+            transform: translateY(0);
+        }
+        
+        .avatar-passport {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .passport-avatar {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 15px;
+        }
+        
+        .passport-info {
+            width: 100%;
+            text-align: center;
+        }
+        
+        .passport-info h2 {
+            margin-top: 0;
+            margin-bottom: 5px;
+        }
+        
+        .passport-info p {
+            margin: 5px 0;
+            color: #666;
+        }
+        
+        .passport-actions {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .action-button {
+            background-color: #6c63ff;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+        
+        .emoji-reactions {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 15px;
+        }
+        
+        .emoji-button {
+            font-size: 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: transform 0.2s ease;
+        }
+        
+        .emoji-button:hover {
+            transform: scale(1.2);
+            background-color: #f0f0f0;
+        }
+        
+        #passport-edit {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            padding: 20px;
+            box-sizing: border-box;
+            z-index: 300;
+            display: none;
+            pointer-events: auto;
+        }
+        
+        .edit-form {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        .save-button {
+            background-color: #6c63ff;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 12px 25px;
+            font-size: 16px;
+            cursor: pointer;
+            display: block;
+            margin: 20px auto;
+        }
+        
+        .close-button {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        #saved-passports {
+            padding: 15px;
+        }
+        
+        .saved-passport-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+        
+        .saved-passport-avatar {
+            width: 50px;
+            height: 50px;
+            margin-right: 15px;
+            border-radius: 50%;
+            background-color: #eee;
+        }
+        
+        .saved-passport-info {
+            flex: 1;
+        }
+        
+        .saved-passport-info h3 {
+            margin: 0;
+            font-size: 16px;
+        }
+        
+        .saved-passport-info p {
+            margin: 3px 0 0;
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div id="loading-spinner"></div>
+        <div>Loading Oh-Hey...</div>
+    </div>
+    
+    <!-- Avatar Creator -->
+    <div id="avatar-creator">
+        <div id="avatar-preview"></div>
+        <div id="avatar-controls">
+            <div class="control-group">
+                <h3>Head Shape</h3>
+                <div class="option-buttons" id="head-shapes">
+                    <button class="option-button active" data-shape="sphere">Sphere</button>
+                    <button class="option-button" data-shape="cube">Cube</button>
+                    <button class="option-button" data-shape="cone">Cone</button>
+                    <button class="option-button" data-shape="cylinder">Cylinder</button>
+                    <button class="option-button" data-shape="torus">Donut</button>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <h3>Color</h3>
+                <div id="color-options">
+                    <span class="color-option active" style="background-color: #ff6b6b;" data-color="#ff6b6b"></span>
+                    <span class="color-option" style="background-color: #48dbfb;" data-color="#48dbfb"></span>
+                    <span class="color-option" style="background-color: #1dd1a1;" data-color="#1dd1a1"></span>
+                    <span class="color-option" style="background-color: #feca57;" data-color="#feca57"></span>
+                    <span class="color-option" style="background-color: #6c63ff;" data-color="#6c63ff"></span>
+                    <span class="color-option" style="background-color: #ff9ff3;" data-color="#ff9ff3"></span>
+                    <span class="color-option" style="background-color: #ffffff;" data-color="#ffffff"></span>
+                    <span class="color-option" style="background-color: #576574;" data-color="#576574"></span>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <h3>Face</h3>
+                <div class="option-buttons" id="face-options">
+                    <button class="option-button active" data-face="face1">Happy</button>
+                    <button class="option-button" data-face="face2">Cool</button>
+                    <button class="option-button" data-face="face3">Chill</button>
+                    <button class="option-button" data-face="face4">Excited</button>
+                </div>
+            </div>
+            
+            <button id="confirm-avatar">Confirm Avatar</button>
+        </div>
+    </div>
+    
+    <!-- Main Application Container -->
+    <div id="main-container">
+        <div id="scene-container"></div>
+        
+        <div id="ui-overlay">
+            <div id="menu-button">≡</div>
+            
+            <div id="menu-panel">
+                <h2>Oh-Hey</h2>
+                <div class="menu-section">
+                    <button class="action-button" id="edit-passport-button">Edit My Passport</button>
+                </div>
+                <div class="menu-section">
+                    <h3>Saved Passports</h3>
+                    <div id="saved-passports">
+                        <!-- Saved passports will be populated here -->
+                    </div>
+                </div>
+            </div>
+            
+            <div id="passport-view">
+                <button class="close-button" id="close-passport">×</button>
+                <div class="avatar-passport">
+                    <div class="passport-avatar" id="passport-avatar-preview"></div>
+                    <div class="passport-info">
+                        <h2 id="passport-username">Username</h2>
+                        <p id="passport-job">Job Title</p>
+                        <p id="passport-game">Currently Playing: Game Name</p>
+                        <p><a id="passport-link" href="#" target="_blank">Website/Social Link</a></p>
+                    </div>
+                    <div class="emoji-reactions">
+                        <button class="emoji-button">😀</button>
+                        <button class="emoji-button">🤠</button>
+                        <button class="emoji-button">✌️</button>
+                        <button class="emoji-button">🌵</button>
+                    </div>
+                    <div class="passport-actions">
+                        <button class="action-button" id="save-passport-button">Save to Collection</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="passport-edit">
+                <button class="close-button" id="close-edit">×</button>
+                <h2>Edit Your Passport</h2>
+                <div class="edit-form">
+                    <div class="form-group">
+                        <label for="username-input">Username</label>
+                        <input type="text" id="username-input" placeholder="Your display name">
+                    </div>
+                    <div class="form-group">
+                        <label for="job-input">Job Title</label>
+                        <input type="text" id="job-input" placeholder="Your job title">
+                    </div>
+                    <div class="form-group">
+                        <label for="game-input">Currently Playing</label>
+                        <input type="text" id="game-input" placeholder="Game you're currently playing">
+                    </div>
+                    <div class="form-group">
+                        <label for="link-input">Website/Social Link</label>
+                        <input type="url" id="link-input" placeholder="https://your-website-or-social.com">
+                    </div>
+                    <button class="save-button" id="save-edit-button">Save Passport</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Three.js and other libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.9.0/firebase-app-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.9.0/firebase-auth-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.9.0/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.9.0/firebase-database-compat.js"></script>
+    
+    <!-- Our application scripts will be loaded here -->
+    <script src="js/config.js"></script>
+    <script src="js/avatar.js"></script>
+    <script src="js/location.js"></script>
+    <script src="js/passport.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
